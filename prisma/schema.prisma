@@ -1,0 +1,154 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String          @id @default(cuid())
+  name          String?
+  email         String?         @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  // Optional for WebAuthn support
+  Authenticator Authenticator[]
+  events        Event[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Authenticator {
+  credentialID         String  @unique
+  userId               String
+  providerAccountId    String
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, credentialID])
+}
+
+model Address {
+  id       Int     @id @default(autoincrement())
+  street   String
+  number   Int
+  district String
+  person   Person?
+}
+
+model Contacts {
+  id        Int     @id @default(autoincrement())
+  telephone Int?
+  email     String
+  persons   Person?
+}
+
+model Person {
+  id           Int            @id @default(autoincrement())
+  name         String
+  age          Int
+  addressId    Int            @unique
+  ContactsId   Int            @unique
+  contacts     Contacts       @relation(fields: [ContactsId], references: [id])
+  address      Address        @relation(fields: [addressId], references: [id])
+  Registration Registration[]
+}
+
+model Event {
+  id            Int            @id @default(autoincrement())
+  name          String
+  image         String?
+  payment       Boolean
+  price         Decimal
+  description   String
+  publishedById String
+  publishedBy   User           @relation(fields: [publishedById], references: [id], onDelete: Cascade)
+  Registration  Registration[]
+}
+
+model RegistrationToken {
+  id           Int           @id @default(autoincrement())
+  token        String
+  expired_at   DateTime
+  Registration Registration?
+}
+
+model Registration {
+  id       Int               @id @default(autoincrement())
+  EventId  Int
+  personId Int
+  tokenId  Int               @unique
+  Payment  Payment[]
+  token    RegistrationToken @relation(fields: [tokenId], references: [id])
+  person   Person            @relation(fields: [personId], references: [id])
+  event    Event             @relation(fields: [EventId], references: [id])
+}
+
+enum regStatus {
+  PENDENTE
+  CONFIRMADO
+}
+
+model Payment {
+  id             Int          @id @default(autoincrement())
+  paymentStatus  regStatus    @default(PENDENTE)
+  RegistrationId Int
+  registration   Registration @relation(fields: [RegistrationId], references: [id])
+}
