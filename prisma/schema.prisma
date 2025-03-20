@@ -91,6 +91,7 @@ model Address {
   number   Int
   district String
   person   Person?
+  Event    Event[]
 }
 
 model Contacts {
@@ -112,21 +113,27 @@ model Person {
 }
 
 model Event {
-  id            Int            @id @default(autoincrement())
-  name          String
-  image         String?
-  payment       Boolean
-  price         Decimal
-  description   String
-  publishedById String
-  publishedBy   User           @relation(fields: [publishedById], references: [id], onDelete: Cascade)
-  Registration  Registration[]
+  id                   Int            @id @default(autoincrement())
+  name                 String
+  image                String?
+  requiresPayment      Boolean
+  price                Decimal
+  maxParticipants      Int
+  description          String
+  startDate            DateTime
+  endDate              DateTime
+  registrationDeadline DateTime
+  addressId            Int
+  publishedById        String
+  Registration         Registration[]
+  address              Address        @relation(fields: [addressId], references: [id])
+  publishedBy          User           @relation(fields: [publishedById], references: [id], onDelete: Cascade)
 }
 
 model RegistrationToken {
   id           Int           @id @default(autoincrement())
   token        String
-  expired_at   DateTime
+  expiredAt    DateTime
   Registration Registration?
 }
 
