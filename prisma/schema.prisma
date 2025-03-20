@@ -126,8 +126,8 @@ model Event {
   addressId            Int
   publishedById        String
   Registration         Registration[]
-  address              Address        @relation(fields: [addressId], references: [id])
-  publishedBy          User           @relation(fields: [publishedById], references: [id], onDelete: Cascade)
+  address              Address        @relation(fields: [addressId], references: [id], onDelete: Cascade)
+  publishedBy          User?          @relation(fields: [publishedById], references: [id], onDelete: Cascade)
 }
 
 model RegistrationToken {
